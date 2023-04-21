@@ -1,0 +1,19 @@
+{
+    "name": "visuellverstehen/statamic-content-renderer",
+    "autoload": {
+        "psr-4": {
+            "VV\\ContentRenderer\\": "src"
+        }
+    },
+    "extra": {
+        "statamic": {
+            "name": "Statamic Content Renderer",
+            "description": "Statamic Content Renderer addon"
+        },
+        "laravel": {
+            "providers": [
+                "VV\\ContentRenderer\\ServiceProvider"
+            ]
+        }
+    }
+}
