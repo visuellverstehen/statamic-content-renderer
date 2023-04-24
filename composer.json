@@ -1,19 +1,40 @@
 {
     "name": "visuellverstehen/statamic-content-renderer",
+    "description": "A Statamic search transformer for bard and replicator fields.",
+    "keywords": [ "statamic", "addon", "bard", "replicator", "search", "content", "fulltext", "v3", "v4" ],
+    "license": "MIT",
+    "type": "statamic-addon",
     "autoload": {
         "psr-4": {
             "VV\\ContentRenderer\\": "src"
         }
     },
+    "authors": [
+        {
+            "name": "visuellverstehen"
+        }
+    ],
+    "support": {
+        "email": "hello@visuellverstehen.de"
+    },
     "extra": {
         "statamic": {
-            "name": "Statamic Content Renderer",
-            "description": "Statamic Content Renderer addon"
+            "name": "Content Renderer",
+            "description": "A Statamic search transformer for bard and replicator fields."
         },
         "laravel": {
             "providers": [
                 "VV\\ContentRenderer\\ServiceProvider"
             ]
+        }
+    },
+    "require": {
+        "php": "^8.0",
+        "statamic/cms": "^3.4 || ^4.0 || ^4.0@alpha || ^4.0@beta || ^4.0@RC"
+    },
+    "config": {
+        "allow-plugins": {
+            "pixelfear/composer-dist-plugin": false
         }
     }
 }
