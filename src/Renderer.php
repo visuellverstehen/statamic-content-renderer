@@ -19,6 +19,7 @@ class Renderer
     protected $fieldValue;
     protected $viewPath;
     protected $withHtmlTags = false;
+    protected $withLinkTargets = false;
 
     public function render(): string
     {
@@ -70,11 +71,25 @@ class Renderer
 
         return $this;
     }
+    
+    public function withLinkTargets(): self
+    {
+        $this->withLinkTargets = true;
+        
+        return $this;
+    }
 
     public function withoutHtmlTags(): self
     {
         $this->withHtmlTags = false;
 
+        return $this;
+    }
+    
+    public function withoutLinkTargets(): self
+    {
+        $this->withLinkTargets = false;
+        
         return $this;
     }
 
@@ -153,6 +168,12 @@ class Renderer
         $content = preg_replace('/\>[\s+]?\</', '> <', $content);
 
         if (! $this->withHtmlTags) {
+            // optionally extract link targets and add them in () behind the link name
+            if ($this->withLinkTargets) {
+                $content = preg_replace("/<a (?:.+ )?href=\"([-_.~!*'();:@&=+$,\/?%#[A-z0-9]+)\"(?: .+)?>(.+)<\/a>/", '$2 ($1)', $content);
+            }
+            
+            // add whitespace between strings within html tags
             $content = preg_replace('/\>(\w+)\<\//', '/> $1 <', $content);
             $content = strip_tags($content);
         }
