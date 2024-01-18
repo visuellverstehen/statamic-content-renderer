@@ -60,7 +60,7 @@ class MyReplicatorFieldTransformer
 
 ### Preserving links targets
 
-When using the Content Renderer within a search transformer, it might be useful to be able to preserve link targets in the rendered output, to be able to find entries based on urls linked in the content. You can instruct the renderer to add link targets in parenthesis behind the link text:
+When using the Content Renderer within a search transformer, it might be useful to preserve link targets in the rendered output. This makes it possible to find entries based on urls linked in the content. You can instruct the renderer to add link targets in parenthesis behind the link text:
 
 ```php
 $renderer = (new Renderer())->$withLinkTargets();
@@ -71,13 +71,13 @@ $renderer = (new Renderer())->$withLinkTargets();
 
 ### Preserving HTML tags
 
-If you want to keep the HTML tags and/or modify the content in your own way, you can instruct the renderer to keep them:
+If you want to keep the HTML tags and/or modify the content in your own way, you can instruct the renderer not to strip them:
 
 ```php
 $renderer = (new Renderer())->withHtmlTags();
 ```
 
-When you choose to preserve HTML tags, the `withLinkTargets` option (see above) will be ignored.
+**Note:** If you choose to preserve HTML tags, the `withLinkTargets` option (see above) will be ignored.
 
 ## More about us
 

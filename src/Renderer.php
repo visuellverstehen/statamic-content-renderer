@@ -163,7 +163,13 @@ class Renderer
     }
 
     protected function sanitizeContent(string $content): string
-    {
+    {   
+        // remove excess whitespace and empty lines
+        $content = preg_replace('/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/', '', $content);
+        $content = preg_replace('/\n/', '', $content);
+        $content = preg_replace('/\s\s+/', ' ', $content);
+        $content = trim($content);
+        
         // add whitespace between html tags to separate words
         $content = preg_replace('/\>[\s+]?\</', '> <', $content);
 
@@ -177,12 +183,6 @@ class Renderer
             $content = preg_replace('/\>(\w+)\<\//', '/> $1 <', $content);
             $content = strip_tags($content);
         }
-
-        // remove excess whitespace and empty lines
-        $content = preg_replace('/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/', '', $content);
-        $content = preg_replace('/\n/', '', $content);
-        $content = preg_replace('/\s\s+/', ' ', $content);
-        $content = trim($content);
 
         // separate fullstops and starting words that were merged when removing tags
         $content = preg_replace('/(\w)\.(\w+)\s/', '$1. $2 ', $content);
