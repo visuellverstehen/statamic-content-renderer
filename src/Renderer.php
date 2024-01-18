@@ -170,7 +170,7 @@ class Renderer
         if (! $this->withHtmlTags) {
             // optionally extract link targets and add them in () behind the link name
             if ($this->withLinkTargets) {
-                $content = preg_replace("/<a (?:.+ )?href=\"([-_.~!*'();:@&=+$,\/?%#[A-z0-9]+)\"(?: .+)?>(.+)<\/a>/", '$2 ($1)', $content);
+                $content = preg_replace('/<a[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/', '$2 ($1)', $content);
             }
             
             // add whitespace between strings within html tags
