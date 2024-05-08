@@ -79,6 +79,24 @@ $renderer = (new Renderer())->withHtmlTags();
 
 **Note:** If you choose to preserve HTML tags, the `withLinkTargets` option (see above) will be ignored.
 
+### Custom processor 
+
+If you need to modify the content before it is passed on to the render process, you can optionally add a custom processor function:
+
+```php
+$renderer = new Renderer();
+$renderer->setContent($searchable, 'bard_content');
+// …
+
+$renderer->process(function ($content) {
+    // modify content
+    
+    return $content;
+});
+```
+
+This allows you to e. g. remove certain sets or modify the content in any other way.
+
 ## More about us
 
 - [www.visuellverstehen.de](https://visuellverstehen.de)
