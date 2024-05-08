@@ -14,12 +14,20 @@ use Statamic\Modifiers\CoreModifiers;
 class Renderer
 {
     protected $augmentor;
+    protected $customProcessor;
     protected $entry;
     protected $fieldHandle;
     protected $fieldValue;
     protected $viewPath;
     protected $withHtmlTags = false;
     protected $withLinkTargets = false;
+    
+    public function process(callable $callback): self
+    {
+        $this->customProcessor = $callback;
+        
+        return $this;
+    }
 
     public function render(): string
     {
@@ -92,6 +100,16 @@ class Renderer
         
         return $this;
     }
+    
+    protected function customProcess($content)
+    {
+        if ($this->customProcessor && is_callable($this->customProcessor)) {
+            $processor = $this->customProcessor;
+            $content = $processor($content);
+        }
+        
+        return $content;
+    }
 
     protected function renderContent(): string
     {
@@ -125,6 +143,8 @@ class Renderer
         $content = $this->fieldValue->raw();
         $content = $bard->preProcess($content);
         $content = $bard->process($content);
+        $content = $this->customProcess($content);
+        
         $content = $this->augmentor->augment($content);
 
         return $this->viewPath ? $this->renderWithView($content) : $this->renderWithoutView();
@@ -135,6 +155,8 @@ class Renderer
         $content = $this->fieldValue->raw();
         $content = $replicator->preProcess($content);
         $content = $replicator->process($content);
+        $content = $this->customProcess($content);
+        
         $content = $replicator->augment($content);
 
         return $this->viewPath ? $this->renderWithView($content) : '';
