@@ -21,11 +21,11 @@ class Renderer
     protected $viewPath;
     protected $withHtmlTags = false;
     protected $withLinkTargets = false;
-    
+
     public function process(callable $callback): self
     {
         $this->customProcessor = $callback;
-        
+
         return $this;
     }
 
@@ -42,10 +42,19 @@ class Renderer
             $this->entry = EntryFacade::find($entry) ?? false;
         }
 
-        if ($this->entry && $this->entry->has($fieldHandle)) {
-            $this->fieldHandle = $fieldHandle;
+        if (! $this->entry) {
+            return $this;
         }
 
+        if (
+            ! $this->entry->has($fieldHandle) &&
+            $this->entry->origin() &&
+            $this->entry->origin()->has($fieldHandle)
+        ) {
+            $this->entry = $this->entry->origin();
+        }
+
+        $this->fieldHandle = $fieldHandle;
         $this->fieldValue = $this->entry->augmentedValue($this->fieldHandle);
 
         return $this;
@@ -79,11 +88,11 @@ class Renderer
 
         return $this;
     }
-    
+
     public function withLinkTargets(): self
     {
         $this->withLinkTargets = true;
-        
+
         return $this;
     }
 
@@ -93,21 +102,21 @@ class Renderer
 
         return $this;
     }
-    
+
     public function withoutLinkTargets(): self
     {
         $this->withLinkTargets = false;
-        
+
         return $this;
     }
-    
+
     protected function customProcess($content)
     {
         if ($this->customProcessor && is_callable($this->customProcessor)) {
             $processor = $this->customProcessor;
             $content = $processor($content);
         }
-        
+
         return $content;
     }
 
@@ -144,7 +153,7 @@ class Renderer
         $content = $bard->preProcess($content);
         $content = $bard->process($content);
         $content = $this->customProcess($content);
-        
+
         $content = $this->augmentor->augment($content);
 
         return $this->viewPath ? $this->renderWithView($content) : $this->renderWithoutView();
@@ -156,7 +165,7 @@ class Renderer
         $content = $replicator->preProcess($content);
         $content = $replicator->process($content);
         $content = $this->customProcess($content);
-        
+
         $content = $replicator->augment($content);
 
         return $this->viewPath ? $this->renderWithView($content) : '';
@@ -185,13 +194,13 @@ class Renderer
     }
 
     protected function sanitizeContent(string $content): string
-    {   
+    {
         // remove excess whitespace and empty lines
         $content = preg_replace('/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/', '', $content);
         $content = preg_replace('/\n/', '', $content);
         $content = preg_replace('/\s\s+/', ' ', $content);
         $content = trim($content);
-        
+
         // add whitespace between html tags to separate words
         $content = preg_replace('/\>[\s+]?\</', '> <', $content);
 
@@ -200,7 +209,7 @@ class Renderer
             if ($this->withLinkTargets) {
                 $content = preg_replace('/<a[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/', '$2 ($1)', $content);
             }
-            
+
             // add whitespace between strings within html tags
             $content = preg_replace('/\>(\w+)\<\//', '/> $1 <', $content);
             $content = strip_tags($content);
