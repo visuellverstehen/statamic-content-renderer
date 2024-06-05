@@ -130,6 +130,10 @@ class Renderer
             $this->fieldValue = $this->entry->augmentedValue($this->fieldHandle);
         }
 
+        if (! $this->fieldValue->fieldtype()) {
+            return '';
+        }
+
         $fieldtype = $this->fieldValue->field()->fieldtype();
 
         if ($fieldtype instanceof Bard) {
