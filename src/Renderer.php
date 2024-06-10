@@ -126,15 +126,13 @@ class Renderer
             return '';
         }
 
-        if (! $this->fieldValue) {
-            $this->fieldValue = $this->entry->augmentedValue($this->fieldHandle);
-        }
-
-        if (! $this->fieldValue->fieldtype()) {
+        // make sure we definitely have field data
+        // (might be a problem with e. g. old content files)
+        if (! $this->fieldValue && ! $this->fieldValue = $this->entry->augmentedValue($this->fieldHandle)) {
             return '';
         }
 
-        $fieldtype = $this->fieldValue->field()->fieldtype();
+        $fieldtype = $this->fieldValue->field()?->fieldtype();
 
         if ($fieldtype instanceof Bard) {
             return $this->renderBard($fieldtype);
