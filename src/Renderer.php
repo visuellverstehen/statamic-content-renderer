@@ -162,6 +162,11 @@ class Renderer
 
     protected function renderReplicator(Replicator $replicator): string
     {
+        if (! $this->viewPath) {
+            // can't render without a view
+            return '';
+        }
+        
         $content = $this->fieldValue->raw();
         $content = $replicator->preProcess($content);
         $content = $replicator->process($content);
@@ -169,7 +174,7 @@ class Renderer
 
         $content = $replicator->augment($content);
 
-        return $this->viewPath ? $this->renderWithView($content) : '';
+        return $this->renderWithView($content) : '';
     }
 
     protected function renderWithView($content): string
