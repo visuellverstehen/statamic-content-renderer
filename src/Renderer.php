@@ -132,17 +132,16 @@ class Renderer
             return '';
         }
 
-        $fieldtype = $this->fieldValue->field()?->fieldtype();
-
-        if ($fieldtype instanceof Bard) {
-            return $this->renderBard($fieldtype);
+        $fieldtype = $this->fieldValue->fieldtype();
+        
+        switch (true) {
+            case $fieldtype instanceof Bard:
+                return $this->renderBard($fieldtype);
+            case $fieldtype instanceof Replicator:
+                return $this->renderReplicator($fieldtype);
+            default:
+                return '';
         }
-
-        if ($fieldtype instanceof Replicator) {
-            return $this->renderReplicator($fieldtype);
-        }
-
-        return '';
     }
 
     protected function renderBard(Bard $bard): string
