@@ -174,7 +174,7 @@ class Renderer
 
         $content = $replicator->augment($content);
 
-        return $this->renderWithView($content) : '';
+        return $this->renderWithView($content) ?? '';
     }
 
     protected function renderWithView($content): string
