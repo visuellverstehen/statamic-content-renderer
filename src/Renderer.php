@@ -3,6 +3,7 @@
 namespace VV\ContentRenderer;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Facades\Entry as EntryFacade;
 use Statamic\Fields\Value;
@@ -39,7 +40,7 @@ class Renderer
         if ($entry instanceof Entry) {
             $this->entry = $entry;
         } else {
-            $this->entry = EntryFacade::find($entry) ?? false;
+            $this->entry = EntryFacade::find($entry);
         }
 
         if (! $this->entry) {
@@ -174,7 +175,7 @@ class Renderer
 
         $content = $replicator->augment($content);
 
-        return $this->renderWithView($content) ?? '';
+        return $this->renderWithView($content);
     }
 
     protected function renderWithView($content): string
@@ -186,7 +187,13 @@ class Renderer
         try {
             $content = (string) view($this->viewPath, [$this->fieldHandle => $content]);
         } catch (Exception $e) {
-            return $e->getMessage();
+            Log::error('ContentRenderer: Failed to render view.', [
+                'view' => $this->viewPath,
+                'field' => $this->fieldHandle,
+                'error' => $e->getMessage(),
+            ]);
+
+            return '';
         }
 
         return $this->sanitizeContent($content);

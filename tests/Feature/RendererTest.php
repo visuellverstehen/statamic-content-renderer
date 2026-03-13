@@ -561,6 +561,23 @@ it('falls back to origin entry for untranslated fields', function () {
 });
 
 // ──────────────────────────────────────────────────────────────────────
+// Error handling
+// ──────────────────────────────────────────────────────────────────────
+
+it('returns empty string and logs when view rendering fails', function () {
+    $entry = createBardEntry([
+        bardParagraph('Some content'),
+    ]);
+
+    $result = (new Renderer())
+        ->setContent($entry, 'content')
+        ->setView('nonexistent-view')
+        ->render();
+
+    expect($result)->toBe('');
+});
+
+// ──────────────────────────────────────────────────────────────────────
 // Fluent API
 // ──────────────────────────────────────────────────────────────────────
 
