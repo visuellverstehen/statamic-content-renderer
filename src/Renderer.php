@@ -201,28 +201,32 @@ class Renderer
 
     public function sanitizeContent(string $content): string
     {
-        // remove excess whitespace and empty lines
-        $content = preg_replace('/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/', '', $content);
-        $content = preg_replace('/\n/', '', $content);
+        // replace newlines and excess whitespace with a single space
+        $content = preg_replace('/[\r\n]+/', ' ', $content);
         $content = preg_replace('/\s\s+/', ' ', $content);
         $content = trim($content);
 
-        // add whitespace between html tags to separate words
-        $content = preg_replace('/\>[\s+]?\</', '> <', $content);
+        // add whitespace between adjacent html tags to separate words
+        $content = preg_replace('/>\s*</', '> <', $content);
 
         if (! $this->withHtmlTags) {
             // optionally extract link targets and add them in () behind the link name
             if ($this->withLinkTargets) {
-                $content = preg_replace('/<a[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/', '$2 ($1)', $content);
+                $content = preg_replace('/<a[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/s', '$2 ($1)', $content);
             }
 
-            // add whitespace between strings within html tags
-            $content = preg_replace('/\>(\w+)\<\//', '/> $1 <', $content);
             $content = strip_tags($content);
         }
 
-        // separate fullstops and starting words that were merged when removing tags
-        $content = preg_replace('/(\w)\.(\w+)\s/', '$1. $2 ', $content);
+        if (! $this->withHtmlTags) {
+            // separate fullstops and starting words that were merged when removing tags
+            // only match word chars (not :/ etc.) to avoid splitting URLs
+            $content = preg_replace('/([a-zA-Z])\.([A-Z])/', '$1. $2', $content);
+        }
+
+        // collapse any whitespace introduced by tag removal
+        $content = preg_replace('/\s\s+/', ' ', $content);
+        $content = trim($content);
 
         return $content;
     }

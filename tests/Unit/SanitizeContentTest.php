@@ -31,14 +31,12 @@ it('collapses multiple spaces into one', function () {
 
 it('removes empty lines', function () {
     $input = "line one\n\n\nline two";
-    // BUG: newlines are removed without adding a space, merging words
-    expect(sanitize($input))->toBe('line oneline two');
+    expect(sanitize($input))->toBe('line one line two');
 });
 
 it('removes newlines', function () {
     $input = "hello\nworld";
-    // BUG: newline removal merges words without space
-    expect(sanitize($input))->toBe('helloworld');
+    expect(sanitize($input))->toBe('hello world');
 });
 
 // ──────────────────────────────────────────────────────────────────────
@@ -107,15 +105,23 @@ it('does not extract link targets when withHtmlTags is enabled', function () {
 // ──────────────────────────────────────────────────────────────────────
 
 it('separates words merged by fullstops', function () {
-    $result = sanitize('end.Start of next');
-    expect($result)->toBe('end. Start of next');
+    expect(sanitize('end.Start of next'))->toBe('end. Start of next');
 });
 
-it('does not add space for abbreviations or numbers', function () {
-    // e.g. "1.5" should ideally not be split, but the regex is simple
-    // Just verifying current behavior
-    $result = sanitize('version 1.5 is out');
-    expect($result)->toBeString();
+it('separates fullstops at end of string', function () {
+    expect(sanitize('end.Start'))->toBe('end. Start');
+});
+
+it('does not split numbers with fullstops', function () {
+    expect(sanitize('version 1.5 is out'))->toBe('version 1.5 is out');
+});
+
+it('does not split URLs', function () {
+    expect(sanitize('visit example.com today'))->toBe('visit example.com today');
+});
+
+it('does not split lowercase.lowercase', function () {
+    expect(sanitize('e.g. this'))->toBe('e.g. this');
 });
 
 // ──────────────────────────────────────────────────────────────────────
@@ -131,6 +137,5 @@ it('handles string with only whitespace', function () {
 });
 
 it('handles string with only HTML tags', function () {
-    // BUG: space insertion between tags creates residual whitespace that isn't fully trimmed
-    expect(sanitize('<div><span></span></div>'))->toBe('   ');
+    expect(sanitize('<div><span></span></div>'))->toBe('');
 });
