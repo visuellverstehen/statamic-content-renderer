@@ -63,7 +63,7 @@ class MyReplicatorFieldTransformer
 When using the Content Renderer within a search transformer, it might be useful to preserve link targets in the rendered output. This makes it possible to find entries based on urls linked in the content. You can instruct the renderer to add link targets in parenthesis behind the link text:
 
 ```php
-$renderer = (new Renderer())->$withLinkTargets();
+$renderer = (new Renderer())->withLinkTargets();
 
 // read more <a href="https://visuellverstehen.de">about the author</a> of this package
 // becomes: read more about the author (https://visuellverstehen.de) of this package
@@ -96,6 +96,19 @@ $renderer->process(function ($content) {
 ```
 
 This allows you to e. g. remove certain sets or modify the content in any other way.
+
+### Using a Value object directly
+
+If you already have a Value object (`Statamic\Fields\Value`, e. g. from a fieldtype), you can pass it directly to the renderer using `setValue()` instead of `setContent()`:
+
+```php
+$renderer = new Renderer();
+$renderer->setValue($fieldValue);
+
+$content = $renderer->render();
+```
+
+The renderer will automatically resolve the entry and field handle from the Value object.
 
 ## More about us
 
