@@ -2,6 +2,7 @@
 
 namespace VV\ContentRenderer;
 
+use Closure;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Statamic\Contracts\Entries\Entry;
@@ -14,16 +15,16 @@ use Statamic\Modifiers\CoreModifiers;
 
 class Renderer
 {
-    protected $augmentor;
-    protected $customProcessor;
-    protected $entry;
-    protected $fieldHandle;
-    protected $fieldValue;
-    protected $viewPath;
-    protected $withHtmlTags = false;
-    protected $withLinkTargets = false;
+    protected ?Augmentor $augmentor = null;
+    protected ?Closure $customProcessor = null;
+    protected ?Entry $entry = null;
+    protected ?string $fieldHandle = null;
+    protected ?Value $fieldValue = null;
+    protected ?string $viewPath = null;
+    protected bool $withHtmlTags = false;
+    protected bool $withLinkTargets = false;
 
-    public function process(callable $callback): self
+    public function process(Closure $callback): self
     {
         $this->customProcessor = $callback;
 
@@ -113,9 +114,8 @@ class Renderer
 
     protected function customProcess($content)
     {
-        if ($this->customProcessor && is_callable($this->customProcessor)) {
-            $processor = $this->customProcessor;
-            $content = $processor($content);
+        if ($this->customProcessor) {
+            $content = ($this->customProcessor)($content);
         }
 
         return $content;
@@ -134,7 +134,7 @@ class Renderer
         }
 
         $fieldtype = $this->fieldValue->fieldtype();
-        
+
         switch (true) {
             case $fieldtype instanceof Bard:
                 return $this->renderBard($fieldtype);
@@ -167,7 +167,7 @@ class Renderer
             // can't render without a view
             return '';
         }
-        
+
         $content = $this->fieldValue->raw();
         $content = $replicator->preProcess($content);
         $content = $replicator->process($content);
