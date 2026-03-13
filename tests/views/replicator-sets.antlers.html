@@ -1,0 +1,10 @@
+{{ blocks }}
+    {{ if type == "text" }}
+        <p>{{ text }}</p>
+    {{ elseif type == "quote" }}
+        <blockquote>
+            <p>{{ quote }}</p>
+            <cite>{{ author }}</cite>
+        </blockquote>
+    {{ /if }}
+{{ /blocks }}

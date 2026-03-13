@@ -199,7 +199,7 @@ class Renderer
         return $this->sanitizeContent($content);
     }
 
-    protected function sanitizeContent(string $content): string
+    public function sanitizeContent(string $content): string
     {
         // remove excess whitespace and empty lines
         $content = preg_replace('/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/', '', $content);
