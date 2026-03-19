@@ -11,11 +11,9 @@ use Statamic\Fields\Value;
 use Statamic\Fieldtypes\Bard;
 use Statamic\Fieldtypes\Bard\Augmentor;
 use Statamic\Fieldtypes\Replicator;
-use Statamic\Modifiers\CoreModifiers;
 
 class Renderer
 {
-    protected ?Augmentor $augmentor = null;
     protected ?Closure $customProcessor = null;
     protected ?Entry $entry = null;
     protected ?string $fieldHandle = null;
@@ -147,18 +145,24 @@ class Renderer
 
     protected function renderBard(Bard $bard): string
     {
-        if (! $this->augmentor) {
-            $this->augmentor = (new Augmentor($bard))->withStatamicImageUrls();
-        }
-
         $content = $this->fieldValue->raw();
-        $content = $bard->preProcess($content);
-        $content = $bard->process($content);
         $content = $this->customProcess($content);
 
-        $content = $this->augmentor->augment($content);
+        if ($this->viewPath) {
+            $content = $bard->augment($content);
 
-        return $this->viewPath ? $this->renderWithView($content) : $this->renderWithoutView();
+            return $this->renderWithView($content);
+        }
+
+        // Without view: get HTML output and strip set placeholders
+        $augmentor = (new Augmentor($bard))->withStatamicImageUrls();
+        $html = $augmentor->convertToHtml($content);
+
+        // Remove set placeholders and any empty elements they leave behind
+        $html = preg_replace('/<set>index-\d+<\/set>/', '', $html);
+        $html = preg_replace('/<(p|h[1-6])>\s*<\/\1>/', '', $html);
+
+        return $this->sanitizeContent($html);
     }
 
     protected function renderReplicator(Replicator $replicator): string
@@ -169,10 +173,7 @@ class Renderer
         }
 
         $content = $this->fieldValue->raw();
-        $content = $replicator->preProcess($content);
-        $content = $replicator->process($content);
         $content = $this->customProcess($content);
-
         $content = $replicator->augment($content);
 
         return $this->renderWithView($content);
@@ -195,13 +196,6 @@ class Renderer
 
             return '';
         }
-
-        return $this->sanitizeContent($content);
-    }
-
-    protected function renderWithoutView(): string
-    {
-        $content = (new CoreModifiers)->bardHtml($this->fieldValue);
 
         return $this->sanitizeContent($content);
     }
