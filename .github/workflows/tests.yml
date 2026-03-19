@@ -1,0 +1,46 @@
+name: Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [8.2, 8.3, 8.4, 8.5]
+        statamic: [^6.0]
+        include:
+          - php: 8.2
+            statamic: ^6.0
+            stability: prefer-stable
+
+    name: PHP ${{ matrix.php }} - Statamic ${{ matrix.statamic }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+          composer require "statamic/cms:${{ matrix.statamic }}" --no-interaction --no-update
+          composer update --${{ matrix.stability || 'prefer-stable' }} --no-interaction
+
+      - name: Run tests
+        run: ./vendor/bin/pest
