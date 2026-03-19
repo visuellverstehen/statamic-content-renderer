@@ -1,2 +1,6 @@
 /.idea
 /vendor
+/composer.lock
+/.nova
+.DS_Store
+tests/__fixtures__/dev-null

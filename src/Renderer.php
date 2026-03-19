@@ -2,7 +2,9 @@
 
 namespace VV\ContentRenderer;
 
+use Closure;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Facades\Entry as EntryFacade;
 use Statamic\Fields\Value;
@@ -13,16 +15,16 @@ use Statamic\Modifiers\CoreModifiers;
 
 class Renderer
 {
-    protected $augmentor;
-    protected $customProcessor;
-    protected $entry;
-    protected $fieldHandle;
-    protected $fieldValue;
-    protected $viewPath;
-    protected $withHtmlTags = false;
-    protected $withLinkTargets = false;
+    protected ?Augmentor $augmentor = null;
+    protected ?Closure $customProcessor = null;
+    protected ?Entry $entry = null;
+    protected ?string $fieldHandle = null;
+    protected ?Value $fieldValue = null;
+    protected ?string $viewPath = null;
+    protected bool $withHtmlTags = false;
+    protected bool $withLinkTargets = false;
 
-    public function process(callable $callback): self
+    public function process(Closure $callback): self
     {
         $this->customProcessor = $callback;
 
@@ -39,7 +41,7 @@ class Renderer
         if ($entry instanceof Entry) {
             $this->entry = $entry;
         } else {
-            $this->entry = EntryFacade::find($entry) ?? false;
+            $this->entry = EntryFacade::find($entry);
         }
 
         if (! $this->entry) {
@@ -112,9 +114,8 @@ class Renderer
 
     protected function customProcess($content)
     {
-        if ($this->customProcessor && is_callable($this->customProcessor)) {
-            $processor = $this->customProcessor;
-            $content = $processor($content);
+        if ($this->customProcessor) {
+            $content = ($this->customProcessor)($content);
         }
 
         return $content;
@@ -133,7 +134,7 @@ class Renderer
         }
 
         $fieldtype = $this->fieldValue->fieldtype();
-        
+
         switch (true) {
             case $fieldtype instanceof Bard:
                 return $this->renderBard($fieldtype);
@@ -166,7 +167,7 @@ class Renderer
             // can't render without a view
             return '';
         }
-        
+
         $content = $this->fieldValue->raw();
         $content = $replicator->preProcess($content);
         $content = $replicator->process($content);
@@ -174,7 +175,7 @@ class Renderer
 
         $content = $replicator->augment($content);
 
-        return $this->renderWithView($content) ?? '';
+        return $this->renderWithView($content);
     }
 
     protected function renderWithView($content): string
@@ -186,7 +187,13 @@ class Renderer
         try {
             $content = (string) view($this->viewPath, [$this->fieldHandle => $content]);
         } catch (Exception $e) {
-            return $e->getMessage();
+            Log::error('ContentRenderer: Failed to render view.', [
+                'view' => $this->viewPath,
+                'field' => $this->fieldHandle,
+                'error' => $e->getMessage(),
+            ]);
+
+            return '';
         }
 
         return $this->sanitizeContent($content);
@@ -199,30 +206,34 @@ class Renderer
         return $this->sanitizeContent($content);
     }
 
-    protected function sanitizeContent(string $content): string
+    public function sanitizeContent(string $content): string
     {
-        // remove excess whitespace and empty lines
-        $content = preg_replace('/(^[\r\n]*|[\r\n]+)[\s\t]*[\r\n]+/', '', $content);
-        $content = preg_replace('/\n/', '', $content);
+        // replace newlines and excess whitespace with a single space
+        $content = preg_replace('/[\r\n]+/', ' ', $content);
         $content = preg_replace('/\s\s+/', ' ', $content);
         $content = trim($content);
 
-        // add whitespace between html tags to separate words
-        $content = preg_replace('/\>[\s+]?\</', '> <', $content);
+        // add whitespace between adjacent html tags to separate words
+        $content = preg_replace('/>\s*</', '> <', $content);
 
         if (! $this->withHtmlTags) {
             // optionally extract link targets and add them in () behind the link name
             if ($this->withLinkTargets) {
-                $content = preg_replace('/<a[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/', '$2 ($1)', $content);
+                $content = preg_replace('/<a[^>]+href="([^"]+)"[^>]*>(.*?)<\/a>/s', '$2 ($1)', $content);
             }
 
-            // add whitespace between strings within html tags
-            $content = preg_replace('/\>(\w+)\<\//', '/> $1 <', $content);
             $content = strip_tags($content);
         }
 
-        // separate fullstops and starting words that were merged when removing tags
-        $content = preg_replace('/(\w)\.(\w+)\s/', '$1. $2 ', $content);
+        if (! $this->withHtmlTags) {
+            // separate fullstops and starting words that were merged when removing tags
+            // only match word chars (not :/ etc.) to avoid splitting URLs
+            $content = preg_replace('/([a-zA-Z])\.([A-Z])/', '$1. $2', $content);
+        }
+
+        // collapse any whitespace introduced by tag removal
+        $content = preg_replace('/\s\s+/', ' ', $content);
+        $content = trim($content);
 
         return $content;
     }

@@ -1,0 +1,9 @@
+{{ content }}
+    {{ if type == "text" }}
+        <p>{{ text }}</p>
+    {{ elseif type == "set" }}
+        {{ text }}
+    {{ else }}
+        {!! $value !!}
+    {{ /if }}
+{{ /content }}
