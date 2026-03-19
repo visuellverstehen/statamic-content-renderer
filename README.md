@@ -2,6 +2,13 @@
 
 A Statamic addon that renders content from bard and replicator fields to make their content searchable with [search transformers](https://statamic.dev/search#transforming-fields).
 
+## Requirements
+
+| Version | Statamic | PHP |
+|---------|----------|-----|
+| 2.x | ^6.0 | ^8.2 |
+| 1.x | ^3.4 \|\| ^4.0 \|\| ^5.0 | ^8.1 |
+
 ## How to Install
 
 Run the following command from your project root:
@@ -109,6 +116,52 @@ $content = $renderer->render();
 ```
 
 The renderer will automatically resolve the entry and field handle from the Value object.
+
+## Upgrading
+
+### From v1.x to v2.0
+
+Version 2.0 is a major release that aligns with Statamic v6. It contains breaking changes.
+
+#### Requirements
+
+- PHP 8.2+ (up from 8.1)
+- Statamic 6.0+ (dropped support for v3/v4/v5)
+
+#### Custom Processor Changes
+
+The `process()` callback now receives **raw field data** instead of data processed through Statamic's CP pipeline.
+
+**For most users, no changes are needed.** The data structure for filtering by `type` is identical:
+
+```php
+// This works the same in v1.x and v2.x
+$renderer->process(function ($content) {
+    return array_filter($content, fn ($item) => ($item['type'] ?? null) !== 'set');
+});
+```
+
+However, if you were modifying inner field values within sets, those values will now be raw instead of processed through their respective fieldtypes. Adjust your callback accordingly:
+
+```php
+// v1.x - values were processed
+$renderer->process(function ($content) {
+    // $content[0]['text'] was already processed as a Text fieldtype value
+});
+
+// v2.x - values are raw
+$renderer->process(function ($content) {
+    // $content[0]['text'] is the raw string value from the entry
+});
+```
+
+#### Internal Changes
+
+- The internal `preProcess()`/`process()` round-trip has been removed
+- The Renderer now uses Statamic's public fieldtype `augment()` API directly
+- `renderWithoutView()` now uses the fieldtype's own Bard configuration instead of `CoreModifiers::bardHtml()`
+
+See the [CHANGELOG](CHANGELOG.md) for full details.
 
 ## More about us
 
