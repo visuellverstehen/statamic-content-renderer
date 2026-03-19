@@ -3,7 +3,6 @@
 namespace VV\ContentRenderer\Tests;
 
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Statamic\Extend\Manifest;
 use Statamic\Providers\StatamicServiceProvider;
 use Statamic\Statamic;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
@@ -45,19 +44,9 @@ abstract class TestCase extends OrchestraTestCase
         ];
     }
 
-    protected function getEnvironmentSetUp($app): void
+    protected function defineEnvironment($app): void
     {
-        parent::getEnvironmentSetUp($app);
-
-        $app->make(Manifest::class)->manifest = [
-            'visuellverstehen/statamic-content-renderer' => [
-                'id' => 'visuellverstehen/statamic-content-renderer',
-                'namespace' => 'VV\\ContentRenderer',
-                'autoload' => 'src',
-                'provider' => ServiceProvider::class,
-                'version' => 'dev-test',
-            ],
-        ];
+        parent::defineEnvironment($app);
 
         $app['config']->set('statamic.users.repository', 'file');
         $app['config']->set('statamic.stache.watcher', false);
