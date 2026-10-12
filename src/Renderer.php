@@ -156,13 +156,32 @@ class Renderer
 
         // Without view: get HTML output and strip set placeholders
         $augmentor = (new Augmentor($bard))->withStatamicImageUrls();
-        $html = $augmentor->convertToHtml($content);
+        $html = $augmentor->convertToHtml($this->addSetIndexes($content));
 
         // Remove set placeholders and any empty elements they leave behind
         $html = preg_replace('/<set>index-\d+<\/set>/', '', $html);
         $html = preg_replace('/<(p|h[1-6])>\s*<\/\1>/', '', $html);
 
         return $this->sanitizeContent($html);
+    }
+
+    /**
+     * The set node renderer expects an `index` on each set node, which
+     * Statamic's Augmentor only adds within augment(). Mirror that here.
+     */
+    protected function addSetIndexes($content)
+    {
+        if (! is_iterable($content)) {
+            return $content;
+        }
+
+        return collect($content)->map(function ($node, $index) {
+            if (is_array($node) && ($node['type'] ?? null) === 'set') {
+                $node['index'] = 'index-'.$index;
+            }
+
+            return $node;
+        })->all();
     }
 
     protected function renderReplicator(Replicator $replicator): string
