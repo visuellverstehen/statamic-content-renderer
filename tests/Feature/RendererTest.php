@@ -235,6 +235,22 @@ it('renders bard content with sets using a view', function () {
         ->toContain('After the set');
 });
 
+it('renders bard content with sets without a view', function () {
+    $entry = createBardEntry([
+        bardParagraph('Before the set'),
+        bardSet('text', ['text' => 'Set content here']),
+        bardParagraph('After the set'),
+    ]);
+
+    $result = (new Renderer())
+        ->setContent($entry, 'content')
+        ->render();
+
+    expect($result)
+        ->toBe('Before the set After the set')
+        ->not->toContain('index-');
+});
+
 // ──────────────────────────────────────────────────────────────────────
 // Replicator rendering
 // ──────────────────────────────────────────────────────────────────────
